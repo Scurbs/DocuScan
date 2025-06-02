@@ -6,7 +6,7 @@ if getattr(sys, 'frozen', False):
     BASE_PATH  = os.path.dirname(sys.executable)
     
 else:
-    BASE_PATH  = r""
+    BASE_PATH  = r"E:\Workspace\FastDocu\FastDocuV2.0"
 TESSERACT_PATH = os.path.join(BASE_PATH , 'Tesseract-OCR', 'tesseract.exe')
 
 CONFIG_OCR = '--psm 6 --oem 3 eng'
