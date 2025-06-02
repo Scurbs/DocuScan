@@ -30,11 +30,15 @@ To get a .exe follow these steps:
    Download **[Tesseract](https://github.com/UB-Mannheim/tesseract)** from UB-Mannheim for Windows
    Place the folder "Tesseract" into the same folder where main.py is.
 
-4. Run the main.spec file for building the .exe
+3. Edit main.spec:
+   If you want to use the debug mode, then you have to set the flag on true for console
+
+5. Run the main.spec file for building the .exe
    ```
    pyinstaller main.spec
    ```
-5. You are ready to convert
+6. Place the .exe in the same folder where main.py is.
+   You can ow use the program !
 ## Usage
 ### Start
 The Start page offers four main options:

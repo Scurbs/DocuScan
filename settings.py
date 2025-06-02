@@ -2,11 +2,11 @@ import sys
 import os
 
 if getattr(sys, 'frozen', False):
-   
+     # Path where the .exe is located when bundled 
     BASE_PATH  = os.path.dirname(sys.executable)
     
 else:
-    BASE_PATH  = r"E:\Workspace\FastDocu\FastDocuV2.0"
+    BASE_PATH  = r"E:\Git_Workspace\DocuScan"
 TESSERACT_PATH = os.path.join(BASE_PATH , 'Tesseract-OCR', 'tesseract.exe')
 
 CONFIG_OCR = '--psm 6 --oem 3 eng'
@@ -42,12 +42,8 @@ MAIN_COLUMNS = 1
 SETTINGS_ROWS = 4
 SETTINGS_COLUMNS = 3
 
-EQUIPMENT_COLUMNS = 3
-EQUIPMENT_ROWS = 2
-
-
 FILETYPES = [("PDF files", "*.pdf"), ("Image files", "*.jpg;*.jpeg;*.png"), ("All files", "*.*")]
 DEFAUL_DPI = 300
 
-EQUIPMENT_START_COLUMN = 27
+
 
