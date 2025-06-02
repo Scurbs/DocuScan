@@ -3,6 +3,7 @@ import customtkinter as ctk
 from customtkinter import filedialog
 from tkinter import messagebox
 from settings import *
+from Programm.model import UpdateType
 from Gui.Widgets import Button
 from tkinter import messagebox
 from Gui.SettingsWindow import SettingsWindow
@@ -49,6 +50,72 @@ class FastDocuView(ctk.CTk):
         self.button_settings = Button(self, 2, 0, 1, 1, '', 'Settings', 
                                       lambda: self.open_settings_window())
 
+    def update(self, update_type, data=None, text = None):
+        
+        if update_type == UpdateType.TASK_STARTED:
+
+            self.after(0, self.open_progress_bar) 
+           
+        elif update_type == UpdateType.TASK_PROGRESS:
+
+            print("Status:", data,"%,", text)
+            self.after(0, self.update_progress_bar, data, text) 
+
+        elif update_type == UpdateType.TASK_COMPLETED:
+
+            self.after(0, lambda: messagebox.showinfo("Notification", "Finished data extraction"))  
+            self.after(0, self.close_progress_window)
+            
+
+        elif update_type == UpdateType.ERROR_OCCURRED:
+
+            self.after(0, lambda: messagebox.showerror("Error", text))  
+            self.after(0, self.close_progress_window)  
+
+    def update_progress_bar(self, value, text):
+        
+        if hasattr(self, 'progress_bar'):
+            self.progress_bar.set(value/100)  
+            self.progress_label.configure(text = text)
+            self.progess_percent_label.configure(text = f'{value}%')
+        else:
+            print("Progress bar not initialized") 
+
+    def close_progress_window(self):
+        if hasattr(self, 'progress_window'):
+            self.progress_window.destroy()  
+            self.progress_window = None 
+
+    def open_progress_bar(self):
+        # Create the progress window
+        self.progress_window = ctk.CTkToplevel(master=self, fg_color=(WHITE, BLACK))
+        self.progress_window.resizable(False, False)
+        
+        window_width = 350
+        window_height = 60
+
+        screen_width = self.progress_window.winfo_screenwidth()
+        screen_height = self.progress_window.winfo_screenheight()
+
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+
+        self.progress_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.progress_window.title("Progress")
+        self.progress_window.lift()
+        self.progress_window.attributes("-topmost", True)
+        
+        self.progress_bar = ctk.CTkProgressBar(self.progress_window, width=300, mode="determinate")
+        self.progress_bar.set(0)
+        self.progress_bar.grid(row=0, column=0, rowspan=2, sticky="ew", padx=5, pady=5)
+
+        self.progress_label = ctk.CTkLabel(master=self.progress_window, text_color="White", height=5, text="Initialize parameters")
+        self.progress_label.grid(row=2, column=0, sticky="s", padx=5, pady=5)
+
+        self.progess_percent_label = ctk.CTkLabel(master=self.progress_window, text_color="White", text="", height=5)
+        self.progess_percent_label.grid(row=0, column=2, sticky="e", padx=5, pady=5)
+
+
     def title_bar_color(self, is_light):
         try:
             HWND = windll.user32.GetParent(self.winfo_id())
@@ -74,6 +141,7 @@ class FastDocuView(ctk.CTk):
             self.settings_window.focus()
             self.settings_window.lift()
             self.settings_window.attributes("-topmost", False)
+            
             
     def convert(self):
        
