@@ -22,6 +22,7 @@ To get a .exe follow these steps:
    git clone https://github.com/Scurbs/DocuScan.git
 
 2. Install dependencies:
+
    For good practice it is recommended to use a virtual environment
    ```
    pip install -r requirements.txt
