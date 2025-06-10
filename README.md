@@ -22,20 +22,21 @@ To get a .exe follow these steps:
    git clone https://github.com/Scurbs/DocuScan.git
 
 2. Install dependencies:
+   For good practice it is recommended to use a virtual environment
    ```
    pip install -r requirements.txt
    ```
-3. Install Tesseract for Windows:
+4. Install Tesseract for Windows:
 
    Download **[Tesseract](https://github.com/UB-Mannheim/tesseract)** from UB-Mannheim for Windows
    Place the folder "Tesseract" into the same folder where main.py is.
 
-3. Edit main.spec:
-   If you want to use the debug mode, then you have to set the flag on true for console
+3. Edit DocuScan.spec:
+   If you want to use the debug mode fully, then you have to set the flag on true for console
 
 5. Run the main.spec file for building the .exe
    ```
-   pyinstaller main.spec
+   pyinstaller DocuScan.spec
    ```
 6. Place the .exe in the same folder where main.py is.
    You can now use the program !
@@ -57,6 +58,8 @@ The generated Excel file includes:
 - Timestamp: From each measurement there is the according timestamp
 - Particle size: For each measuring stripe there a two colums for the particle size 0.5µm and 0.3µm
 - Serial Number: The serial number for each measuring stripe is also displayed
+- The mean values for each particle size
+- Checks if the value is within a range of 15%
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
