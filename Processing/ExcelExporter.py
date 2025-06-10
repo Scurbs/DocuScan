@@ -5,7 +5,7 @@ import os
 from settings import *
 import subprocess
 import platform
-
+import numpy as np
 
 class Exporter:
     def __init__(self, input_data_list, notify_observer, UpdateType, excel_filename="output.xlsx", debug_mode=0):
@@ -111,28 +111,28 @@ class Exporter:
 
                     all_data.append([time, value1, value2])
 
-        
-
         return all_data, serien_number, date_found,
    
+    def sum_column(self, df, col_name):
+        return df[col_name].sum()
+
     def write_df(self):
         combined_df = pd.DataFrame()
-        first_sum = None
         first_df = None
         second_df = None
-        second_sum = None
-        
+
+        dataframes_to_process = []
+
         for i, data_dict in enumerate(self.data_dict):
             value, ser_number, date = self.data_dict_conversion(data_dict)
-            
+
             if value:
-    
                 current_data_frame = pd.DataFrame(value, columns=['Zeit', '0.5', '0.3'])
                 current_data_frame.at[0, 'Datum'] = date
                 try:
                     ser_number = int(ser_number) if ser_number else None
                 except ValueError:
-                    ser_number = None 
+                    ser_number = None
 
                 current_data_frame.at[0, 'Ser. Nummer'] = ser_number
 
@@ -141,21 +141,52 @@ class Exporter:
                     if col in current_data_frame.columns:
                         current_data_frame[col] = pd.to_numeric(current_data_frame[col], errors='coerce')
 
-                if first_df is None:
-                    first_df = current_data_frame
-                    first_sum = self.sum_column(first_df, "0.3") if "0.3" in first_df.columns else None
-                    if self.debug_mode == 1:
-                        print("Sum firts dataframe: ", first_sum)
-                elif second_df is None:
-                    second_df = current_data_frame
-                    second_sum = self.sum_column(second_df, "0.3") if "0.3" in second_df.columns else None
-                    if self.debug_mode == 1:
-                        print("Sum second dataframe: ", second_sum)
+                dataframes_to_process.append(current_data_frame)
 
-        #Swap dataframes if they are not in the correct order accroding to the particle size 0.5 and 0.3
-        if first_sum is not None and second_sum is not None:
-            if first_sum < second_sum:
-                first_df, second_df = second_df, first_df
+        #Determine first_df and second_df based on sum_column
+        if len(dataframes_to_process) >= 1:
+
+            sums = []
+            for df in dataframes_to_process:
+                current_sum = self.sum_column(df, "0.3") if "0.3" in df.columns else np.inf 
+                sums.append(current_sum)
+
+            sorted_dataframes_with_sums = sorted(zip(sums, dataframes_to_process), key=lambda x: x[0])
+            sorted_dataframes = [df for s, df in sorted_dataframes_with_sums]
+
+            if len(sorted_dataframes) >= 2:
+                # If first_sum < second_sum, then first_df should be the one with the larger sum
+                if sorted_dataframes_with_sums[0][0] < sorted_dataframes_with_sums[1][0]:
+                    first_df = sorted_dataframes[1] 
+                    second_df = sorted_dataframes[0] 
+                else: 
+                    first_df = sorted_dataframes[0]
+                    second_df = sorted_dataframes[1]
+
+            elif len(sorted_dataframes) == 1:
+                first_df = sorted_dataframes[0]
+
+        if first_df is not None:
+            first_df = first_df.rename(columns={
+                'Zeit': 'Zeit_1',
+                '0.5': '0.5_1',
+                '0.3': '0.3_1',
+                'Datum': 'Datum_1',
+                'Ser. Nummer': 'Ser. Nummer_1'
+            })
+            if self.debug_mode == 1:
+                print("First DF dtypes before concat (renamed):", first_df.dtypes)
+
+        if second_df is not None:
+            second_df = second_df.rename(columns={
+                'Zeit': 'Zeit_2',
+                '0.5': '0.5_2',
+                '0.3': '0.3_2',
+                'Datum': 'Datum_2',
+                'Ser. Nummer': 'Ser. Nummer_2'
+            })
+            if self.debug_mode == 1:
+                print("Second DF dtypes before concat (renamed):", second_df.dtypes)
 
         if first_df is not None and second_df is not None:
             combined_df = pd.concat([first_df, second_df], axis=1)
@@ -164,9 +195,27 @@ class Exporter:
         elif second_df is not None:
             combined_df = second_df
         
+        if self.debug_mode == 1:
+            print("Combined DF dtypes after concat:", combined_df.dtypes)
+            print("Combined DF before adding means:\n", combined_df)
+
+        if not combined_df.empty:
+
+            columns_for_individual_means = ['0.5_1', '0.3_1', '0.5_2', '0.3_2']
+
+            for col in columns_for_individual_means:
+                if col in combined_df.columns:
+                    mean_col_name = f'Mittelwert {col}'
+ 
+                    mean_value = combined_df[col].mean()
+                    
+                    combined_df[mean_col_name] = np.nan
+                    combined_df.at[0, mean_col_name] = mean_value
+                else:
+                    combined_df[f'Mittelwert {col}'] = np.nan
+
         return combined_df
          
-
     def sum_column(self,df, column_name):
 
         numeric_values = pd.to_numeric(df[column_name], errors='coerce')
@@ -204,4 +253,3 @@ class Exporter:
                 self.organized_data_dict[seite].append(d)
         return self.organized_data_dict
         
-
