@@ -116,6 +116,9 @@ class Exporter:
     def sum_column(self, df, col_name):
         return df[col_name].sum()
 
+    def notify_observer(self, update_type, message, details):
+        print(f"Notification: {update_type} - {message} - {details}")
+
     def write_df(self):
         combined_df = pd.DataFrame()
         first_df = None
@@ -148,7 +151,7 @@ class Exporter:
 
             sums = []
             for df in dataframes_to_process:
-                current_sum = self.sum_column(df, "0.3") if "0.3" in df.columns else np.inf 
+                current_sum = self.sum_column(df, "0.3") if "0.3" in df.columns else np.inf
                 sums.append(current_sum)
 
             sorted_dataframes_with_sums = sorted(zip(sums, dataframes_to_process), key=lambda x: x[0])
@@ -157,9 +160,9 @@ class Exporter:
             if len(sorted_dataframes) >= 2:
                 # If first_sum < second_sum, then first_df should be the one with the larger sum
                 if sorted_dataframes_with_sums[0][0] < sorted_dataframes_with_sums[1][0]:
-                    first_df = sorted_dataframes[1] 
-                    second_df = sorted_dataframes[0] 
-                else: 
+                    first_df = sorted_dataframes[1]
+                    second_df = sorted_dataframes[0]
+                else:
                     first_df = sorted_dataframes[0]
                     second_df = sorted_dataframes[1]
 
@@ -175,7 +178,7 @@ class Exporter:
                 'Ser. Nummer': 'Ser. Nummer_1'
             })
             if self.debug_mode == 1:
-                print("First DF dtypes before concat (renamed):", first_df.dtypes)
+                print("First DF dtypes before concat:", first_df.dtypes)
 
         if second_df is not None:
             second_df = second_df.rename(columns={
@@ -186,7 +189,7 @@ class Exporter:
                 'Ser. Nummer': 'Ser. Nummer_2'
             })
             if self.debug_mode == 1:
-                print("Second DF dtypes before concat (renamed):", second_df.dtypes)
+                print("Second DF dtypes before concat:", second_df.dtypes)
 
         if first_df is not None and second_df is not None:
             combined_df = pd.concat([first_df, second_df], axis=1)
@@ -194,34 +197,36 @@ class Exporter:
             combined_df = first_df
         elif second_df is not None:
             combined_df = second_df
-        
+
         if self.debug_mode == 1:
             print("Combined DF dtypes after concat:", combined_df.dtypes)
             print("Combined DF before adding means:\n", combined_df)
 
         if not combined_df.empty:
-
             columns_for_individual_means = ['0.5_1', '0.3_1', '0.5_2', '0.3_2']
 
             for col in columns_for_individual_means:
                 if col in combined_df.columns:
                     mean_col_name = f'Mittelwert {col}'
- 
                     mean_value = combined_df[col].mean()
-                    
+
                     combined_df[mean_col_name] = np.nan
                     combined_df.at[0, mean_col_name] = mean_value
+
+                    threshold = mean_value * 1.15
+
+                    # boolean column for values over the threshold
+                    combined_df[f'{col}_over_15_percent_mean'] = combined_df[col] > threshold
+
                 else:
                     combined_df[f'Mittelwert {col}'] = np.nan
+                    combined_df[f'{col}_over_15_percent_mean'] = False
 
         return combined_df
-         
-    def sum_column(self,df, column_name):
 
+    def sum_column(self, df, column_name):
         numeric_values = pd.to_numeric(df[column_name], errors='coerce')
-
         total = numeric_values[numeric_values.notna() & (numeric_values.astype(int) == numeric_values)].sum()
-        
         return int(total)
 
     def write_data_to_excel(self):
@@ -233,15 +238,14 @@ class Exporter:
                     sheet_name = None
 
                     self.data_dict = [d for d in dicts]
-                    
+
                     if self.data_dict:
                         sheet_name = f'Seite_{seite}'
                         df = self.write_df()
                         df.to_excel(writer,sheet_name = sheet_name, index = False)
 
         except Exception as e:
-            
-            self.notify_observer(self.UpdateType.ERROR_OCCURRED,"","Close Excelfile and try again")
+            self.notify_observer(self.UpdateType.ERROR_OCCURRED, "", f"Close Excelfile and try again: {e}")
                 
 
     def organize_data_by_page(self):

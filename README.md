@@ -38,7 +38,7 @@ To get a .exe follow these steps:
    pyinstaller main.spec
    ```
 6. Place the .exe in the same folder where main.py is.
-   You can ow use the program !
+   You can now use the program !
 ## Usage
 ### Start
 The Start page offers four main options:

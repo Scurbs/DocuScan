@@ -48,7 +48,7 @@ class PDFToImagesConverter:
 
             args = [(page_number, self.pdf_path, self.output_folder, self.dpi) for page_number in range(num_pages)]
 
-            #Multiprocessing for daster conversion to img
+            #Multiprocessing for faster conversion to img
             with Pool() as pool:
                 pool.starmap(process_page, args)
 

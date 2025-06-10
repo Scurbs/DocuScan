@@ -2,7 +2,7 @@ import sys
 import os
 
 if getattr(sys, 'frozen', False):
-     # Path where the .exe is located when bundled 
+     # Path where the .exe is located
     BASE_PATH  = os.path.dirname(sys.executable)
     
 else:
